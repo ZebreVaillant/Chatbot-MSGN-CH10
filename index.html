@@ -1,42 +1,83 @@
-
 <!doctype html>
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Assistant MSGN — Terminale STMG</title>
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
+
   <header class="topbar">
     <div class="brand">
       <div class="logo">🎓</div>
       <div>
         <div class="title">Assistant MSGN</div>
-        <div class="subtitle">Terminale STMG — Améliorer la relation avec les clients et usagers grâce aux transformations numériques</div>
+        <div class="subtitle">
+          Terminale STMG — Chapitre 11
+        </div>
       </div>
     </div>
-    <div class="score">Score : <span id="score">0</span>/<span id="total">0</span></div>
+
+    <div class="score">
+      Score : <span id="score">0</span>/<span id="total">0</span>
+    </div>
   </header>
 
   <main class="container">
     <section class="card">
-      <div id="chat" class="chat"></div>
 
+      <!-- Zone de conversation -->
+      <div id="chat" class="chat">
+
+        <!-- Message d'accueil Version 3 -->
+        <div class="msg bot">
+          👋 Bonjour !<br><br>
+
+          Bienvenue dans ton assistant d’entraînement en <b>MSGN – Terminale STMG</b>.<br><br>
+
+          🎯 <b>Capacité à maîtriser</b> :<br>
+          <i>Décrire l’apport des technologies numériques aux relations entre l’organisation et ses clients ou usagers.</i><br><br>
+
+          📌 Pour réussir, tu devras mobiliser les notions suivantes :<br>
+          • <b>Consommateur / usager</b><br>
+          • <b>Processus d’achat</b><br>
+          • <b>Besoins, motivations, freins, attitudes</b><br>
+          • <b>Digitalisation de la relation client (GRC/CRM)</b><br>
+          • <b>Traces numériques</b><br>
+          • <b>Réseaux sociaux</b><br>
+          • <b>Administration électronique</b><br><br>
+
+          👉 Choisis une activité ci-dessous pour commencer.
+        </div>
+
+      </div>
+
+      <!-- Boutons d'actions -->
       <div class="actions" id="actions">
-        <button class="pill" data-action="qcm">📝 QCM</button>
-        <button class="pill" data-action="case">📁 Étude de cas</button>
-        <button class="pill" data-action="cours">📚 Explication de cours</button>
+        <button class="pill" data-action="qcm">📝 QCM progressif</button>
+        <button class="pill" data-action="case">📁 Étude de cas (Darty)</button>
+        <button class="pill" data-action="cours">📚 Revoir une notion</button>
         <button class="pill" data-action="bilan">📊 Bilan de session</button>
       </div>
 
+      <!-- Zone de saisie -->
       <div class="inputRow">
-        <input id="input" type="text" placeholder="Écris ici (ou utilise les boutons)…" />
+        <input 
+          id="input" 
+          type="text" 
+          placeholder="Écris ici (ou utilise les boutons)…"
+          autocomplete="off"
+        />
         <button id="send" class="send">Envoyer</button>
       </div>
+
     </section>
   </main>
 
+  <!-- Script principal -->
   <script src="app.js"></script>
+
 </body>
 </html>
