@@ -282,15 +282,28 @@ function accueil() {
   currentExercise = null;
   awaitingFreeAnswer = false;
 
-  addMsg(
-    `👋 Bonjour ! Je suis ton assistant MSGN.<br><br>
-<b>${chapitre.titre}</b><br>
-🎯 <b>Capacité</b> : ${chapitre.capacite}<br>
-<div class="small">
-Utilise les boutons ou écris : <b>cours</b>, <b>qcm</b>, <b>entrainement</b>, <b>hasard</b>, <b>bilan</b>.<br>
-Notions : <b>${chapitre.notions.join(", ")}</b>
-</div>`
-  );
+  addMsg(`
+    👋 Bonjour !<br><br>
+
+    Bienvenue dans ton assistant d’entraînement en <b>MSGN – Terminale STMG</b>.<br><br>
+
+    🎯 <b>Capacité à maîtriser :</b><br>
+    <i>Décrire l’apport des technologies numériques aux relations entre l’organisation et ses clients ou usagers.</i><br><br>
+
+    📌 <b>Notions à mobiliser :</b><br>
+    • <b>Consommateur / usager</b><br>
+    • <b>Processus d’achat</b><br>
+    • <b>Besoins, motivations, freins, attitudes</b><br>
+    • <b>Digitalisation de la relation client (GRC/CRM)</b><br>
+    • <b>Traces numériques</b><br>
+    • <b>Réseaux sociaux</b><br>
+    • <b>Administration électronique</b><br><br>
+
+    👉 Choisis une activité ci-dessous pour commencer.<br>
+    <div class="small">
+    Tu peux aussi taper : <b>qcm</b>, <b>cours</b>, <b>entrainement</b>, <b>hasard</b> ou <b>bilan</b>.
+    </div>
+  `);
 }
 
 function showCours() {
