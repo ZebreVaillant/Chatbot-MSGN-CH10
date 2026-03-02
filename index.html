@@ -1,1 +1,42 @@
 
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Assistant Mercatique — Terminale STMG</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">🎓</div>
+      <div>
+        <div class="title">Assistant Mercatique</div>
+        <div class="subtitle">Terminale STMG — Nouvelles stratégies de communication</div>
+      </div>
+    </div>
+    <div class="score">Score : <span id="score">0</span>/<span id="total">0</span></div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <div id="chat" class="chat"></div>
+
+      <div class="actions" id="actions">
+        <button class="pill" data-action="qcm">📝 QCM</button>
+        <button class="pill" data-action="case">📁 Étude de cas</button>
+        <button class="pill" data-action="cours">📚 Explication de cours</button>
+        <button class="pill" data-action="bilan">📊 Bilan de session</button>
+      </div>
+
+      <div class="inputRow">
+        <input id="input" type="text" placeholder="Écris ici (ou utilise les boutons)…" />
+        <button id="send" class="send">Envoyer</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
