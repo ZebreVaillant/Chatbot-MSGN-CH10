@@ -1,6 +1,6 @@
 /* ===========================
    Assistant MSGN — Terminale STMG
-   Chapitre 11 (Nathan) — Option A (sans IA)
+   Chapitre 11 (Nathan) — Option A + IA (Cloudflare Worker)
    Compatible avec index.html (data-action: qcm/case/cours/bilan)
    =========================== */
 
@@ -20,6 +20,25 @@ let currentExercise = null;       // exercice en cours
 let awaitingFreeAnswer = false;   // attend une réponse rédigée
 let qcmLevel = 1;                 // progression auto 1→2→3
 
+// ===========================
+// IA (Cloudflare Worker)
+// ===========================
+const AI_ENDPOINT = "https://assistant-ia-backend.marine-msgn.workers.dev";
+
+async function askAI(message) {
+  const res = await fetch(AI_ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message })
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data?.detail || data?.error || "Erreur IA");
+  }
+  return data.reply || "Je n’ai pas reçu de réponse de l’IA.";
+}
+
 function addMsg(text, who = "bot") {
   const div = document.createElement("div");
   div.className = `msg ${who}`;
@@ -36,7 +55,7 @@ function setScore(isCorrect) {
 }
 
 function esc(str) {
-  return str
+  return String(str ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;");
@@ -386,7 +405,7 @@ Conseils :<br>
 /* ===========================
    Texte libre (input)
    =========================== */
-function handleUser(text) {
+async function handleUser(text) {
   const t = text.trim().toLowerCase();
 
   if (t === "menu") return accueil();
@@ -401,9 +420,18 @@ function handleUser(text) {
   // si on attend une réponse rédigée
   if (awaitingFreeAnswer) return correctExerciseAnswer();
 
-  addMsg(
-    `Je peux t’aider si tu tapes : <b>qcm</b>, <b>cours</b>, <b>entrainement</b>, <b>hasard</b>, <b>bilan</b> ou une notion (ex : <b>traces</b>).`
-  );
+  // Sinon, on passe en mode IA (réponse libre guidée par la capacité/notions)
+  addMsg("⏳ Je réfléchis…");
+  try {
+    const reply = await askAI(text);
+    addMsg(reply);
+  } catch (e) {
+    addMsg(
+      `⚠️ Je n’arrive pas à contacter l’IA. Vérifie l’URL du Worker ou réessaie.<br><div class="small">${esc(
+        e.message
+      )}</div>`
+    );
+  }
 }
 
 /* ===========================
@@ -427,7 +455,7 @@ chat.addEventListener("click", (e) => {
   const choiceBtn = e.target.closest("button[data-choice]");
   if (choiceBtn && currentQ) {
     const choice = Number(choiceBtn.dataset.choice);
-    const { level, item } = currentQ;
+    const { item } = currentQ;
     const isCorrect = choice === item.ok;
 
     setScore(isCorrect);
@@ -464,12 +492,12 @@ chat.addEventListener("click", (e) => {
 });
 
 // Envoi message
-send.addEventListener("click", () => {
+send.addEventListener("click", async () => {
   const text = input.value;
   if (!text.trim()) return;
   addMsg(esc(text), "user");
   input.value = "";
-  handleUser(text);
+  await handleUser(text);
 });
 
 input.addEventListener("keydown", (e) => {
