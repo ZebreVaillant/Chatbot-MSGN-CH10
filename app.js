@@ -1,7 +1,8 @@
 /* ===========================
    Assistant MSGN — Terminale STMG
-   Chapitre 11 (Nathan) — Option A + IA (Cloudflare Worker)
-   Compatible avec index.html (data-action: qcm/case/cours/bilan)
+   Chapitre 11 — QCM + Situations + Bac (correction IA)
+   Front: GitHub Pages (index.html + style.css + app.js)
+   Backend: Cloudflare Worker (route /grade)
    =========================== */
 
 const chat = document.getElementById("chat");
@@ -11,33 +12,22 @@ const actions = document.getElementById("actions");
 const scoreEl = document.getElementById("score");
 const totalEl = document.getElementById("total");
 
+// ✅ Mets ici l’URL de TON worker (sans slash final)
+const BACKEND_URL = "https://assistant-ia-backend.marine-msgn.workers.dev";
+
 let score = 0;
 let total = 0;
 
-// Etat
-let currentQ = null;              // {level, item}
-let currentExercise = null;       // exercice en cours
-let awaitingFreeAnswer = false;   // attend une réponse rédigée
-let qcmLevel = 1;                 // progression auto 1→2→3
+// État
+let currentQ = null;                 // {level, item}
+let awaitingFreeAnswer = false;      // correction “attendue” (sans IA)
+let currentExercise = null;
 
-// ===========================
-// IA (Cloudflare Worker)
-// ===========================
-const AI_ENDPOINT = "https://assistant-ia-backend.marine-msgn.workers.dev";
+let awaitingBacAnswer = false;       // attend une réponse Bac
+let currentBac = null;               // {id, title, consigne, attendus, motsCles}
 
-async function askAI(message) {
-  const res = await fetch(AI_ENDPOINT, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message })
-  });
-
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(data?.detail || data?.error || "Erreur IA");
-  }
-  return data.reply || "Je n’ai pas reçu de réponse de l’IA.";
-}
+let qcmLevel = 1;
+let qcmStreakCorrect = 0;
 
 function addMsg(text, who = "bot") {
   const div = document.createElement("div");
@@ -55,7 +45,7 @@ function setScore(isCorrect) {
 }
 
 function esc(str) {
-  return String(str ?? "")
+  return String(str)
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;");
@@ -65,11 +55,13 @@ function randomPick(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+/* ===========================
+   Cours — Capacité & notions
+   =========================== */
 const chapitre = {
-  titre:
-    "Chapitre 11 — Transformations numériques et relation clients/usagers",
+  titre: "Chapitre 11 — Transformations numériques et relation clients/usagers",
   capacite:
-    "Décrire l’apport des technologies numériques aux relations entre l’organisation, ses clients ou ses usagers.",
+    "Décrire l’apport des technologies numériques aux relations entre l’organisation et ses clients ou usagers.",
   notions: [
     "consommateur",
     "processus",
@@ -77,14 +69,10 @@ const chapitre = {
     "digitalisation",
     "traces",
     "reseaux",
-    "administration",
-    "fracture"
+    "administration"
   ]
 };
 
-/* ===========================
-   NOTIONS — Explications
-   =========================== */
 const notions = {
   consommateur: {
     titre: "Consommateur / Usager",
@@ -97,12 +85,12 @@ const notions = {
     def:
       "Le **processus d’achat** regroupe les étapes depuis la prise de conscience du besoin jusqu’à l’achat et l’après-achat (SAV/avis).",
     ex:
-      "Ex (ordinateur) : recherche en ligne → magasin (prise en main) → achat → fidélité → SAV / avis."
+      "Ex : recherche → comparaison → achat → fidélité → SAV/avis."
   },
   facteurs: {
     titre: "Besoins / Motivations / Freins / Attitudes",
     def:
-      "**Besoins** (Maslow) ; **motivations** (Joannis : hédonistes/oblatives/auto-expression) ; **freins** (peurs/inhibitions/doutes) ; **attitudes** (cognitif/affectif/conatif).",
+      "**Besoins** (Maslow) ; **motivations** (ex : hédonistes/oblatives/auto-expression) ; **freins** (prix, doute, peur…) ; **attitudes** (cognitif/affectif/conatif).",
     ex:
       "Ex : frein = prix trop élevé ; attitude = “Apple = qualité” (cognitif) + préférence (affectif)."
   },
@@ -111,229 +99,66 @@ const notions = {
     def:
       "Outils numériques (site, appli, tchat, espace client, CRM…) pour **optimiser la relation** : connaissance client + interactivité + personnalisation → **fidéliser**.",
     ex:
-      "Ex : espace client Darty + assistance connectée + réseaux sociaux."
+      "Ex : espace client + assistance + réseaux sociaux."
   },
   traces: {
     titre: "Traces numériques",
     def:
-      "Informations enregistrées sur l’activité/identité des utilisateurs **automatiquement** (cookies…) ou via un **dépôt intentionnel** (création de compte, avis…).",
+      "Informations enregistrées sur l’activité/identité des utilisateurs **automatiquement** (cookies…) ou via un **dépôt intentionnel** (compte, avis…).",
     ex:
-      "Ex : pages consultées, temps passé, panier, historique d’achats, réclamations, commentaires."
+      "Ex : pages consultées, panier, historique d’achats, réclamations, commentaires."
   },
   reseaux: {
-    titre: "Réseaux sociaux (outils & usages)",
+    titre: "Réseaux sociaux",
     def:
-      "Outils grand public (Facebook, X, Instagram…) : interaction, info/promos, avis/commentaires ⇒ e-réputation et connaissance client.",
+      "Outils grand public (Instagram, TikTok, X…) : interaction, info, avis/commentaires → e-réputation + connaissance client.",
     ex:
-      "Ex : posts, likes, commentaires = source d’informations pour l’entreprise."
+      "Ex : likes, commentaires et messages = informations pour l’organisation."
   },
   administration: {
     titre: "Administration électronique",
     def:
-      "Usage du numérique par les administrations : démarches simplifiées, accès aux documents, amélioration des processus et des échanges.",
+      "Usage du numérique par les administrations : démarches simplifiées, accès aux documents, amélioration des échanges.",
     ex:
-      "Ex : déclaration d’impôts en ligne, demande d’actes, carte grise, démarches CAF."
-  },
-  fracture: {
-    titre: "Fracture numérique",
-    def:
-      "Inégalités d’accès et de maîtrise du numérique : difficultés d’usage/équipement/réseau (zones blanches…).",
-    ex:
-      "Ex : personnes âgées, sans diplôme, isolées, zones rurales plus exposées."
+      "Ex : impôts en ligne, CAF, ameli, demande d’actes."
   }
 };
 
 /* ===========================
-   EXERCICES — Questions du chapitre (Darty + applications)
-   (corrections issues du support prof)
-   =========================== */
-const exercices = [
-  { id:"AV1", theme:"Avant la classe", titre:"Intérêt de connaître les attentes",
-    prompt:"Quel est l’intérêt pour Darty de connaître les attentes de ses clients ?",
-    correction:"Répondre aux besoins, satisfaire les clients et donc les fidéliser."
-  },
-
-  // I — Connaissance client
-  { id:"I1", theme:"I — Connaissance client", titre:"Consommateur au cœur du processus d’achat",
-    prompt:"Expliquez pour quelles raisons la révolution numérique a placé les consommateurs au cœur du processus d’achat.",
-    correction:"Internet et réseaux sociaux donnent accès à de nombreuses informations et avis : le consommateur compare, se renseigne, devient plus expert et influence les décisions."
-  },
-  { id:"I2", theme:"I — Connaissance client", titre:"Étapes du processus d’achat (ordinateur)",
-    prompt:"Citez les différentes étapes du processus d’achat d’un ordinateur.",
-    correction:"1) Recherche/comparaison sur plusieurs sites\n2) Visite en magasin (prise en main)\n3) Décision d’achat\n4) Souscription fidélité\n5) Après-achat : réclamations/SAV"
-  },
-  { id:"I3", theme:"I — Connaissance client", titre:"Traces numériques : collecte",
-    prompt:"Expliquez de quelle manière Darty recueille des traces numériques sur ses clients.",
-    correction:"Traces recueillies automatiquement (cookies) et via dépôts intentionnels, à chaque étape : recherche, achat, compte/fidélité, SAV, réseaux sociaux."
-  },
-  { id:"I4", theme:"I — Connaissance client", titre:"Infos collectées à chaque étape",
-    prompt:"Quelles informations sur les clients sont recueillies lors de chaque étape du processus d’achat d’un ordinateur ?",
-    correction:"Recherche : pages consultées, temps passé, produits vus, comparaisons, délais.\nAchat : historique, fréquence, livraison, paiement, montant, adresse.\nCompte/fidélité : identité, âge, téléphone, e-mail.\nSAV : incidents, réclamations.\nRéseaux sociaux : avis/suggestions/mécontentements."
-  },
-  { id:"I5", theme:"I — Connaissance client", titre:"Digitalisation et recueil d’informations",
-    prompt:"Expliquez comment la digitalisation du processus d’achat chez Darty facilite le recueil d’informations sur les clients.",
-    correction:"Elle permet de tracer le parcours en ligne, d’enregistrer/conserver des données à l’achat et au compte fidélité, et de collecter des informations via les réseaux sociaux."
-  },
-
-  // II — Comportement
-  { id:"II6", theme:"II — Comportement du consommateur", titre:"Maslow",
-    prompt:"À quel besoin de la pyramide de Maslow correspond l’achat d’un ordinateur chez Darty ? Justifiez.",
-    correction:"Besoin de sécurité (fiabilité) et/ou estime/accomplissement (performance, tâches complexes)."
-  },
-  { id:"II7", theme:"II — Comportement du consommateur", titre:"Motivation et freins",
-    prompt:"Comment qualifier la motivation de la majorité des clients lors de l’achat d’un ordinateur ? Quels sont les principaux freins ? Justifiez.",
-    correction:"Motivation plutôt hédoniste (usage personnel). Frein principal : le prix (renoncement si trop élevé)."
-  },
-  { id:"II8", theme:"II — Comportement du consommateur", titre:"Attitude vis-à-vis d’Apple",
-    prompt:"Quelle est l’attitude des consommateurs vis-à-vis d’Apple (cognitif/affectif/conatif) ?",
-    correction:"Conatif : pas forcément la marque achetée.\nCognitif : gage de qualité/haute technologie.\nAffectif : marque préférée."
-  },
-  { id:"II9", theme:"II — Comportement du consommateur", titre:"Numérique et connaissance du comportement",
-    prompt:"Expliquez comment le numérique facilite la connaissance du comportement du consommateur.",
-    correction:"Il permet de recueillir de nombreuses informations, de les stocker, puis de les traiter/analyser."
-  },
-  { id:"II10", theme:"II — Comportement du consommateur", titre:"Enjeu",
-    prompt:"Quel est l’enjeu pour Darty de connaître le comportement de ses clients ?",
-    correction:"Adapter l’offre aux attentes et comportements des clients."
-  },
-  { id:"II11", theme:"II — Comportement du consommateur", titre:"Adaptation de l’offre",
-    prompt:"Montrez comment Darty adapte son offre en fonction de l’analyse des comportements de ses clients.",
-    correction:"Ex : demande de PC gaming → promo sur un modèle adapté (Victus 15). Parcours digitalisé → livraison domicile ou retrait magasin."
-  },
-
-  // III — GRC
-  { id:"III12", theme:"III — GRC (relation client)", titre:"Outils Darty",
-    prompt:"Quels sont les outils utilisés par Darty pour gérer la relation avec ses clients ?",
-    correction:"Espace client (suivi commande, factures/notices, rétractation, réparation…), Bouton Darty (assistance SAV 24/7), réseaux sociaux (infos, promos, jeux, nouveautés)."
-  },
-  { id:"III13", theme:"III — GRC (relation client)", titre:"Pourquoi GRC digitalisée ?",
-    prompt:"Pourquoi peut-on dire qu’il s’agit d’une gestion de la relation client digitalisée ?",
-    correction:"Parce que l’entreprise utilise des outils numériques en liaison permanente : plateforme/espace client, assistance connectée, site Internet, réseaux sociaux."
-  },
-  { id:"III14", theme:"III — GRC (relation client)", titre:"Interactivité",
-    prompt:"Montrez comment la gestion de la relation client permet une interactivité entre Darty et ses clients.",
-    correction:"Lien permanent + réponses rapides : analyse des attentes, adaptation, prise en compte des demandes en temps réel, informations/offres personnalisées."
-  },
-  { id:"III15", theme:"III — GRC (relation client)", titre:"Réseaux sociaux et interaction",
-    prompt:"Comment Darty utilise-t-il les réseaux sociaux pour être en interaction avec ses clients ?",
-    correction:"Communication continue : infos, promos, nouveautés + analyse avis/commentaires (connaissance client)."
-  },
-  { id:"III16", theme:"III — GRC (relation client)", titre:"Avantages",
-    prompt:"Quels sont les avantages de la digitalisation de la relation client pour l’entreprise et pour le client ?",
-    correction:"Entreprise : meilleure connaissance, contact permanent, adaptation offre → fidélisation.\nClients : contact facilité, parcours simplifié, accès documents/infos du début à l’après-vente."
-  },
-
-  // Applications
-  { id:"APP1", theme:"Applications", titre:"Définitions",
-    prompt:"Retrouvez la définition de : traces numériques, processus d’achat, motivation, réseaux sociaux, digitalisation relation client, frein à l’achat.",
-    correction:"Frein : pulsion négative (peur/doute/inhibition) empêchant l’achat.\nMotivation : raison poussant à acheter.\nProcessus : étapes du besoin à l’achat (et souvent après-achat).\nRéseaux sociaux : sites/apps de réseau et interactions.\nTraces : infos activité/identité enregistrées automatiquement ou par dépôt intentionnel.\nDigitalisation RC : actions numériques pour optimiser relation et fidéliser."
-  },
-  { id:"APP2", theme:"Applications", titre:"CRM",
-    prompt:"Expliquez : (1) ce qu’est un logiciel CRM ; (2) ses fonctions ; (3) comment il favorise la fidélisation.",
-    correction:"(1) CRM : stocke infos clients (profil, historique, panier moyen…).\n(2) Traite/recoupe/analyse les données.\n(3) Permet une relation et des offres personnalisées → satisfaction → fidélisation."
-  },
-  { id:"APP3", theme:"Usagers / Administration", titre:"Administration électronique + fracture numérique",
-    prompt:"Expliquez comment l’administration utilise le numérique pour : communiquer, simplifier les démarches, donner accès aux documents ; puis définissez la fracture numérique et les publics exposés.",
-    correction:"Démarches/échanges en ligne ; simplification (impôts, amendes, carte grise…) ; accès/consultation/reproduction de documents ; fracture numérique = inégalités d’accès/maîtrise (personnes âgées, sans diplôme, isolées, zones rurales/“blanches”…)."
-  }
-];
-
-/* ===========================
-   QCM — progression automatique
-   QCM (bouton) = lance le niveau courant,
-   puis après 3 bonnes réponses → niveau suivant
+   QCM — progression N1 → N3
    =========================== */
 const QCM = {
   1: [
     { q:"Un **usager** est plutôt associé à…", a:["un service public / une administration","un achat systématique"], ok:0,
-      exp:"Usager = utilisation d’un service, souvent public."},
+      exp:"Usager = utilisation d’un service, souvent public." },
     { q:"La **digitalisation du processus d’achat** signifie que…", a:["le consommateur utilise des canaux digitaux à plusieurs étapes","le consommateur ne va jamais sur Internet"], ok:0,
-      exp:"Internet/achats en ligne/réseaux sociaux jalonnent le parcours."},
+      exp:"Internet/achats en ligne/réseaux sociaux jalonnent le parcours." },
     { q:"Une **trace numérique** peut être…", a:["une page consultée","une poignée de main"], ok:0,
-      exp:"Trace = info liée à l’activité/identité en ligne."}
+      exp:"Trace = info liée à l’activité/identité en ligne." }
   ],
   2: [
-    { q:"Quel exemple correspond à la collecte **pendant l’achat** ?", a:["mode de livraison et paiement","couleur du tableau"], ok:0,
-      exp:"Pendant l’achat : livraison/paiement/montant/adresse…"},
+    { q:"Quel exemple correspond à la collecte **pendant l’achat** ?", a:["mode de livraison et paiement","couleur du tableau en magasin"], ok:0,
+      exp:"Pendant l’achat : livraison/paiement/montant/adresse…" },
     { q:"Un avantage majeur de la GRC digitalisée pour l’entreprise est…", a:["mieux connaître ses clients","ne plus avoir de clients"], ok:0,
-      exp:"Données + contact permanent = meilleure connaissance."},
+      exp:"Données + contact permanent = meilleure connaissance." },
     { q:"Les réseaux sociaux permettent surtout de…", a:["recueillir avis/commentaires","remplacer tous les magasins"], ok:0,
-      exp:"Avis/commentaires = infos + e-réputation."}
+      exp:"Avis/commentaires = infos + e-réputation." }
   ],
   3: [
     { q:"Si le frein principal est le **prix**, une action pertinente est…", a:["promotions/offres ciblées","supprimer toute information sur le prix"], ok:0,
-      exp:"Offres ciblées peuvent lever un frein prix."},
-    { q:"La **fracture numérique** correspond à…", a:["inégalités d’accès/maîtrise du numérique","uniquement aux pannes de Wi-Fi"], ok:0,
-      exp:"Elle touche accès réseau + équipement + compétences."},
-    { q:"Une limite possible d’une relation trop digitalisée est…", a:["déshumanisation/exclusion","amélioration automatique"], ok:0,
-      exp:"Tout numérique peut exclure certains publics."}
+      exp:"Offres ciblées peuvent lever un frein prix." },
+    { q:"Une limite d’une relation trop digitalisée est…", a:["exclusion / déshumanisation possible","amélioration automatique"], ok:0,
+      exp:"Tout numérique peut exclure certains publics." },
+    { q:"La connaissance client progresse grâce au numérique car…", a:["les traces sont stockées et analysées","les clients n’ont plus le choix"], ok:0,
+      exp:"Traces + traitement = meilleure compréhension." }
   ]
 };
 
-// Suivi progression QCM : 3 réponses correctes au même niveau → niveau suivant
-let qcmStreakCorrect = 0;
-
-/* ===========================
-   Modes
-   =========================== */
-
-function accueil() {
-  currentQ = null;
-  currentExercise = null;
-  awaitingFreeAnswer = false;
-
-  addMsg(`
-    👋 Bonjour !<br><br>
-
-    Bienvenue dans ton assistant d’entraînement en <b>MSGN – Terminale STMG</b>.<br><br>
-
-    🎯 <b>Capacité à maîtriser :</b><br>
-    <i>Décrire l’apport des technologies numériques aux relations entre l’organisation et ses clients ou usagers.</i><br><br>
-
-    📌 <b>Notions à mobiliser :</b><br>
-    • <b>Consommateur / usager</b><br>
-    • <b>Processus d’achat</b><br>
-    • <b>Besoins, motivations, freins, attitudes</b><br>
-    • <b>Digitalisation de la relation client (GRC/CRM)</b><br>
-    • <b>Traces numériques</b><br>
-    • <b>Réseaux sociaux</b><br>
-    • <b>Administration électronique</b><br><br>
-
-    👉 Choisis une activité ci-dessous pour commencer.<br>
-    <div class="small">
-    Tu peux aussi taper : <b>qcm</b>, <b>cours</b>, <b>entrainement</b>, <b>hasard</b> ou <b>bilan</b>.
-    </div>
-  `);
-}
-
-function showCours() {
-  addMsg(
-    `📚 <b>Explication de cours</b><br>
-Tape une notion : <b>${chapitre.notions.join("</b>, <b>")}</b>.<br>
-<div class="small">Ex : tape “traces” ou “digitalisation”.</div>`
-  );
-}
-
-function explainNotion(key) {
-  const n = notions[key];
-  if (!n) {
-    addMsg(
-      `Je ne reconnais pas cette notion. Essaie : <b>${chapitre.notions.join(
-        ", "
-      )}</b>.`
-    );
-    return;
-  }
-  addMsg(
-    `✅ <b>${n.titre}</b><br>${n.def}<br><br><i>${n.ex}</i>
-<div class="small">Pour t’entraîner : clique sur <b>QCM</b> ou <b>Étude de cas</b>.</div>`
-  );
-}
-
 function askQCM() {
-  // Lance le niveau courant
   currentExercise = null;
   awaitingFreeAnswer = false;
+  awaitingBacAnswer = false;
+  currentBac = null;
 
   const bank = QCM[qcmLevel] || QCM[1];
   const item = randomPick(bank);
@@ -344,107 +169,337 @@ function askQCM() {
     .join(" ");
 
   addMsg(
-    `📝 <b>QCM</b> — Niveau <b>${qcmLevel}</b><br>${esc(item.q)}
+    `📝 <b>QCM progressif</b> — Niveau <b>${qcmLevel}</b><br>${esc(item.q)}
 <div class="small">Choisis :</div>${choices}
 <div class="small">Progression : 3 bonnes réponses d’affilée → niveau suivant.</div>`
   );
 }
 
-function showEntrainementMenu() {
+/* ===========================
+   Situations concrètes (2–3)
+   =========================== */
+const situations = [
+  {
+    id: "S1",
+    titre: "Entreprise — Darty (client)",
+    contexte:
+      "Darty veut mieux connaître ses clients et améliorer la fidélisation via son site, son appli et son espace client.",
+    questions: [
+      "Quelles <b>traces numériques</b> Darty peut-il collecter pendant le processus d’achat ? Donne 3 exemples.",
+      "Explique comment la <b>digitalisation de la relation client (GRC/CRM)</b> peut augmenter la satisfaction et la fidélisation."
+    ]
+  },
+  {
+    id: "S2",
+    titre: "Service public — CAF (usager)",
+    contexte:
+      "La CAF dématérialise de nombreuses démarches (dossiers, justificatifs, suivi, messagerie).",
+    questions: [
+      "Pourquoi parle-t-on d’<b>administration électronique</b> ? Donne 2 avantages pour l’usager.",
+      "Cite une limite possible : en quoi la transformation numérique peut créer une difficulté pour certains usagers ?"
+    ]
+  },
+  {
+    id: "S3",
+    titre: "Plateforme — Doctolib (usager/client)",
+    contexte:
+      "Une plateforme de rendez-vous en ligne facilite la prise de RDV et centralise des informations.",
+    questions: [
+      "Explique comment le numérique rend l’usager plus <b>acteur</b> de son parcours (interactivité).",
+      "Identifie 1 <b>frein</b> possible (peur, doute…) et propose 1 solution pour le lever."
+    ]
+  }
+];
+
+function showSituations() {
   currentQ = null;
   awaitingFreeAnswer = false;
+  currentExercise = null;
+  awaitingBacAnswer = false;
+  currentBac = null;
 
-  const themes = [...new Set(exercices.map((e) => e.theme))];
-  const buttons = themes
-    .map(
-      (t) =>
-        `<button class="pill" data-theme="${esc(t)}">📌 ${esc(t)}</button>`
-    )
+  const buttons = situations
+    .map(s => `<button class="pill" data-situation="${esc(s.id)}">📌 ${esc(s.titre)}</button>`)
     .join(" ");
 
   addMsg(
-    `📁 <b>Étude de cas / Entraînement (Darty + applications)</b><br>
-Choisis un thème ou tape <b>hasard</b> :<br><br>${buttons}
-<div class="small">Ensuite, je te pose une question et tu rédiges ta réponse.</div>`
+    `📁 <b>Situations concrètes</b><br>
+Choisis une situation :<br><br>${buttons}
+<div class="small">Je te poserai 2 questions. Réponds en 4 à 8 lignes à chaque fois.</div>`
   );
 }
 
-function askExerciseByTheme(theme) {
-  const pool = exercices.filter((e) => e.theme === theme);
-  if (!pool.length) return addMsg("Je ne trouve pas ce thème.");
-  askExercise(randomPick(pool));
-}
+let currentSituation = null;
+let situationStep = 0;
 
-function askExercise(ex) {
-  currentExercise = ex;
+function startSituation(id) {
+  const s = situations.find(x => x.id === id);
+  if (!s) return addMsg("Je ne trouve pas cette situation.");
+
+  currentSituation = s;
+  situationStep = 0;
   awaitingFreeAnswer = true;
 
   addMsg(
-    `✍️ <b>${esc(ex.theme)}</b> — ${esc(ex.titre)}<br><br>
-${esc(ex.prompt)}
-<div class="small">Réponds en 3 à 8 lignes. Puis j’affiche la correction attendue.</div>`
+    `📌 <b>${esc(s.titre)}</b><br>
+<div class="small">${esc(s.contexte)}</div><br>
+✍️ Question 1 :<br>${s.questions[0]}`
   );
 }
 
-function correctExerciseAnswer() {
-  if (!currentExercise) return;
+function handleSituationAnswer() {
+  if (!currentSituation) return;
 
-  const ex = currentExercise;
+  // on affiche une mini consigne de qualité (sans “corriger” automatiquement)
+  addMsg(
+    `✅ Merci !<div class="small">Pense à structurer : <b>affirmation → explication → exemple</b>, avec connecteurs (“d’abord”, “ensuite”, “donc”…).</div>`
+  );
+
+  situationStep += 1;
+
+  if (situationStep >= currentSituation.questions.length) {
+    addMsg(
+      `🎯 Situation terminée.<br>
+Tu peux en faire une autre, ou passer au <b>mode Bac</b> pour t’entraîner à une réponse argumentée notée /20.`
+    );
+    awaitingFreeAnswer = false;
+    currentSituation = null;
+    return;
+  }
+
+  addMsg(`✍️ Question 2 :<br>${currentSituation.questions[1]}`);
+}
+
+/* ===========================
+   Mode Bac — correction IA /20
+   Barème demandé :
+   - Maîtrise du cours
+   - Pertinence des arguments
+   - Construction (alinéas, connecteurs, affirmation-explication-illustration)
+   - Cohérence de l’ensemble
+   - Définitions des termes clés
+   =========================== */
+const sujetsBac = [
+  {
+    id: "B1",
+    title: "Sujet Bac — Entreprise",
+    consigne:
+      "Montrez en quoi les traces numériques et la digitalisation de la relation client permettent à une organisation d’améliorer la satisfaction et la fidélisation.",
+    motsCles: ["traces numériques", "digitalisation", "GRC/CRM", "satisfaction", "fidélisation", "processus d’achat"]
+  },
+  {
+    id: "B2",
+    title: "Sujet Bac — Usagers",
+    consigne:
+      "Dans quelle mesure l’administration électronique améliore-t-elle la relation avec l’usager, tout en créant de nouvelles limites ?",
+    motsCles: ["administration électronique", "usager", "simplification", "accessibilité", "limites", "exclusion"]
+  },
+  {
+    id: "B3",
+    title: "Sujet Bac — Réseaux sociaux",
+    consigne:
+      "Expliquez comment les réseaux sociaux transforment la relation entre l’organisation et ses clients/usagers : opportunités et risques.",
+    motsCles: ["réseaux sociaux", "interactivité", "e-réputation", "connaissance client", "risques", "avis/commentaires"]
+  }
+];
+
+function showBacMenu() {
+  currentQ = null;
   awaitingFreeAnswer = false;
   currentExercise = null;
 
+  const buttons = sujetsBac
+    .map(b => `<button class="pill" data-bac="${esc(b.id)}">✍️ ${esc(b.title)}</button>`)
+    .join(" ");
+
   addMsg(
-    `✅ <b>Correction attendue</b><br>
-<pre style="white-space:pre-wrap;margin:0">${esc(ex.correction)}</pre>
-<div class="small">Si tu veux, je peux t’aider à reformuler en “Idée → Notion → Exemple”.</div>`
+    `✍️ <b>Question type Bac</b> — correction IA notée /20<br>
+Choisis un sujet :<br><br>${buttons}
+<div class="small">Tu rédigeras 10 à 15 lignes, en paragraphes, avec connecteurs, et définitions des termes clés.</div>`
   );
 }
 
+function startBac(id) {
+  const b = sujetsBac.find(x => x.id === id);
+  if (!b) return addMsg("Je ne trouve pas ce sujet.");
+
+  awaitingBacAnswer = true;
+  currentBac = b;
+
+  addMsg(
+    `✍️ <b>${esc(b.title)}</b><br><br>
+<b>Consigne :</b> ${esc(b.consigne)}<br><br>
+<div class="small">
+Attendus :<br>
+• Définitions des termes clés (au moins 2).<br>
+• Arguments pertinents + exemples concrets.<br>
+• Structure : paragraphes + connecteurs + “affirmation → explication → illustration”.<br>
+• Cohérence globale (on comprend le raisonnement).<br><br>
+Quand tu es prêt(e), écris ta réponse ici puis envoie.
+</div>`
+  );
+}
+
+async function gradeWithAI(studentText) {
+  if (!currentBac) return;
+
+  addMsg("⏳ Je corrige ta réponse avec l’IA (note /20 + feedback)…");
+
+  const payload = {
+    consigne: currentBac.consigne,
+    motsCles: currentBac.motsCles,
+    reponse_eleve: studentText,
+    bareme: {
+      maitrise_cours: 8,
+      pertinence_arguments: 5,
+      construction_arguments: 4,
+      coherence_ensemble: 2,
+      definitions_termes: 1
+    }
+  };
+
+  try {
+    const res = await fetch(`${BACKEND_URL}/grade`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      const t = await res.text();
+      throw new Error(`Erreur backend (${res.status}) : ${t}`);
+    }
+
+    const data = await res.json();
+
+    // data attendu:
+    // { note_sur_20, detail_points, points_forts[], axes_amelioration[], conseils_style, reformulation_proposee }
+    const note = data.note_sur_20 ?? "?";
+    const detail = data.detail_points
+      ? `<pre style="white-space:pre-wrap;margin:0">${esc(data.detail_points)}</pre>`
+      : "";
+
+    const forts = Array.isArray(data.points_forts) ? data.points_forts : [];
+    const axes = Array.isArray(data.axes_amelioration) ? data.axes_amelioration : [];
+
+    addMsg(
+      `✅ <b>Correction IA</b><br>
+<b>Note :</b> <b>${esc(note)}</b> / 20<br><br>
+${detail}<br>
+<b>Points forts :</b><br>• ${forts.map(esc).join("<br>• ")}<br><br>
+<b>Axes d’amélioration :</b><br>• ${axes.map(esc).join("<br>• ")}<br><br>
+<b>Conseil de méthode :</b><br>${esc(data.conseils_style ?? "Pense à structurer chaque paragraphe : affirmation → explication → illustration, avec connecteurs.")}<br><br>
+<b>Proposition de reformulation (amélioration) :</b><br>
+<pre style="white-space:pre-wrap;margin:0">${esc(data.reformulation_proposee ?? "")}</pre>`
+    );
+
+  } catch (err) {
+    addMsg(
+      `❌ Impossible de corriger avec l’IA pour l’instant.<br>
+<div class="small">${esc(err.message)}</div><br>
+Vérifie : URL du Worker, CORS, clé API, et que la route <b>/grade</b> répond bien.`
+    );
+  } finally {
+    awaitingBacAnswer = false;
+    currentBac = null;
+  }
+}
+
+/* ===========================
+   Explication de cours
+   =========================== */
+function showCours() {
+  addMsg(
+    `📚 <b>Revoir une notion</b><br>
+Tape une notion : <b>${chapitre.notions.join("</b>, <b>")}</b>.<br>
+<div class="small">Ex : tape “traces” ou “digitalisation”.</div>`
+  );
+}
+
+function explainNotion(key) {
+  const n = notions[key];
+  if (!n) {
+    addMsg(`Je ne reconnais pas cette notion. Essaie : <b>${chapitre.notions.join(", ")}</b>.`);
+    return;
+  }
+  addMsg(
+    `✅ <b>${n.titre}</b><br>${n.def}<br><br><i>${n.ex}</i>
+<div class="small">Pour t’entraîner : QCM, Situations, ou Question Bac.</div>`
+  );
+}
+
+/* ===========================
+   Bilan
+   =========================== */
 function bilan() {
   const pct = total ? Math.round((score / total) * 100) : 0;
 
   addMsg(
     `📊 <b>Bilan de session</b><br>
-Score : <b>${score}/${total}</b> (${pct}%)<br><br>
+Score QCM : <b>${score}/${total}</b> (${pct}%)<br><br>
 <b>Niveau QCM actuel</b> : ${qcmLevel}<br>
 <div class="small">
 Conseils :<br>
 - Si &lt; 50% : refais QCM + relis <b>processus</b> et <b>traces</b>.<br>
-- Si ≥ 50% : fais une étude de cas et mobilise <b>besoins/motivations/freins/attitudes</b>.
+- Si ≥ 50% : fais une situation + entraîne-toi au <b>mode Bac</b> (structure + définitions).<br>
 </div>`
   );
 }
 
 /* ===========================
+   Accueil (Version 3)
+   =========================== */
+function accueil() {
+  currentQ = null;
+  currentExercise = null;
+  awaitingFreeAnswer = false;
+  awaitingBacAnswer = false;
+  currentBac = null;
+  currentSituation = null;
+
+  const html =
+    "👋 Bonjour !<br><br>" +
+    "Bienvenue dans ton assistant d’entraînement en <b>MSGN – Terminale STMG</b>.<br><br>" +
+    "🎯 <b>Capacité à maîtriser :</b><br>" +
+    "<i>Décrire l’apport des technologies numériques aux relations entre l’organisation et ses clients ou usagers.</i><br><br>" +
+    "📌 <b>Pour réussir, tu devras mobiliser les notions suivantes :</b><br>" +
+    "• <b>Consommateur / usager</b><br>" +
+    "• <b>Processus d’achat</b><br>" +
+    "• <b>Besoins, motivations, freins, attitudes</b><br>" +
+    "• <b>Digitalisation de la relation client (GRC/CRM)</b><br>" +
+    "• <b>Traces numériques</b><br>" +
+    "• <b>Réseaux sociaux</b><br>" +
+    "• <b>Administration électronique</b><br><br>" +
+    "👉 Choisis une activité ci-dessous pour commencer.<br>" +
+    '<div class="small">Astuce : tu peux aussi taper une notion (ex : <b>traces</b>) ou <b>menu</b>.</div>';
+
+  addMsg(html, "bot");
+}
+
+/* ===========================
    Texte libre (input)
    =========================== */
-async function handleUser(text) {
+function handleUser(text) {
   const t = text.trim().toLowerCase();
 
   if (t === "menu") return accueil();
   if (t === "cours") return showCours();
   if (t === "qcm") return askQCM();
+  if (t === "situations") return showSituations();
+  if (t === "bac") return showBacMenu();
   if (t === "bilan") return bilan();
-  if (t === "case" || t === "entrainement") return showEntrainementMenu();
-  if (t === "hasard") return askExercise(randomPick(exercices));
 
   if (t in notions) return explainNotion(t);
 
-  // si on attend une réponse rédigée
-  if (awaitingFreeAnswer) return correctExerciseAnswer();
+  // si on attend une réponse Bac
+  if (awaitingBacAnswer) return gradeWithAI(text);
 
-  // Sinon, on passe en mode IA (réponse libre guidée par la capacité/notions)
-  addMsg("⏳ Je réfléchis…");
-  try {
-    const reply = await askAI(text);
-    addMsg(reply);
-  } catch (e) {
-    addMsg(
-      `⚠️ Je n’arrive pas à contacter l’IA. Vérifie l’URL du Worker ou réessaie.<br><div class="small">${esc(
-        e.message
-      )}</div>`
-    );
-  }
+  // si on attend une réponse de situation
+  if (awaitingFreeAnswer && currentSituation) return handleSituationAnswer();
+
+  addMsg(
+    `Je peux t’aider si tu tapes : <b>qcm</b>, <b>cours</b>, <b>situations</b>, <b>bac</b>, <b>bilan</b>, ou une notion (ex : <b>traces</b>).`
+  );
 }
 
 /* ===========================
@@ -457,12 +512,13 @@ actions.addEventListener("click", (e) => {
   const action = btn.dataset.action;
 
   if (action === "qcm") return askQCM();
-  if (action === "case") return showEntrainementMenu();
   if (action === "cours") return showCours();
+  if (action === "case") return showSituations();
+  if (action === "bac") return showBacMenu();
   if (action === "bilan") return bilan();
 });
 
-// Boutons dans le chat (QCM + thèmes)
+// Boutons dans le chat (QCM + situations + bac)
 chat.addEventListener("click", (e) => {
   // Réponse QCM
   const choiceBtn = e.target.closest("button[data-choice]");
@@ -479,13 +535,10 @@ chat.addEventListener("click", (e) => {
     } else {
       qcmStreakCorrect = 0;
       addMsg(
-        `❌ Pas tout à fait. Bonne réponse : <b>${esc(
-          item.a[item.ok]
-        )}</b><div class="small">${esc(item.exp)}</div>`
+        `❌ Pas tout à fait. Bonne réponse : <b>${esc(item.a[item.ok])}</b><div class="small">${esc(item.exp)}</div>`
       );
     }
 
-    // progression automatique
     if (qcmStreakCorrect >= 3 && qcmLevel < 3) {
       qcmLevel += 1;
       qcmStreakCorrect = 0;
@@ -496,21 +549,22 @@ chat.addEventListener("click", (e) => {
     return;
   }
 
-  // Choix de thème (étude de cas)
-  const themeBtn = e.target.closest("button[data-theme]");
-  if (themeBtn) {
-    const theme = themeBtn.dataset.theme;
-    return askExerciseByTheme(theme);
-  }
+  // Choix situation
+  const sitBtn = e.target.closest("button[data-situation]");
+  if (sitBtn) return startSituation(sitBtn.dataset.situation);
+
+  // Choix bac
+  const bacBtn = e.target.closest("button[data-bac]");
+  if (bacBtn) return startBac(bacBtn.dataset.bac);
 });
 
 // Envoi message
-send.addEventListener("click", async () => {
+send.addEventListener("click", () => {
   const text = input.value;
   if (!text.trim()) return;
   addMsg(esc(text), "user");
   input.value = "";
-  await handleUser(text);
+  handleUser(text);
 });
 
 input.addEventListener("keydown", (e) => {
