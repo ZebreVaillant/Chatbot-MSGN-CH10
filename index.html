@@ -1,61 +1,76 @@
 <!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Assistant MSGN — Terminale STMG</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
 </head>
-
 <body>
 
-  <header class="topbar">
-    <div class="brand">
-      <div class="logo">🎓</div>
-      <div>
-        <div class="title">Assistant MSGN</div>
-        <div class="subtitle">
-          Terminale STMG — Chapitre 11
-        </div>
-      </div>
+<header>
+  <div class="brand">
+    <div class="logo-wrap">🎓</div>
+    <div class="brand-text">
+      <div class="title">Assistant MSGN</div>
+      <div class="sub">Terminale STMG · Chapitre 11</div>
+    </div>
+  </div>
+  <div class="xp-area">
+    <span class="xp-label">XP</span>
+    <div class="xp-bar-wrap"><div class="xp-bar-fill" id="xpFill" style="width:0%"></div></div>
+    <span class="level-badge" id="levelBadge">Niv. 1</span>
+    <span class="score-pill">⭐ <span id="score">0</span>/<span id="total">0</span></span>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="side-card">
+      <h3>Activités</h3>
+      <button class="nav-btn" onclick="askQCM()">
+        <span class="icon">📝</span> QCM progressif
+        <span class="nbadge" id="qcmLevelBadge">N1</span>
+      </button>
+      <button class="nav-btn" onclick="showFlashcards()">
+        <span class="icon">🃏</span> Flashcards
+      </button>
+      <button class="nav-btn" onclick="showSituations()">
+        <span class="icon">📁</span> Situations
+      </button>
+      <button class="nav-btn" onclick="showBacMenu()">
+        <span class="icon">✍️</span> Question Bac
+      </button>
+      <button class="nav-btn" onclick="bilan()">
+        <span class="icon">📊</span> Mon bilan
+      </button>
     </div>
 
-    <div class="score">
-      Score : <span id="score">0</span>/<span id="total">0</span>
+    <div class="side-card">
+      <h3>Revoir une notion</h3>
+      <div class="notions-chips" id="notionChips"></div>
     </div>
-  </header>
 
-  <main class="container">
-    <section class="card">
+    <div class="side-card">
+      <h3>Mes badges</h3>
+      <div class="badges-grid" id="badgesGrid"></div>
+    </div>
+  </aside>
 
-      <!-- Zone de conversation -->
-      <div id="chat" class="chat"></div>
+  <div class="chat-col">
+    <div class="chat-body" id="chat"></div>
+    <div class="input-zone">
+      <input id="input" type="text" placeholder="Écris ici ou utilise les boutons…" autocomplete="off"/>
+      <button class="send-btn" id="send">Envoyer ↵</button>
+    </div>
+  </div>
+</div>
 
-      <!-- Boutons d'actions -->
-      <div class="actions" id="actions">
-            <button class="pill" data-action="qcm">📝 QCM</button>
-        <button class="pill" data-action="case">📁 Situations</button>
-        <button class="pill" data-action="cours">📚 Cours</button>
-        <button class="pill" data-action="bac">✍️ Question Bac</button>
-        <button class="pill" data-action="bilan">📊 Bilan</button>
-      </div>
+<div id="toast"></div>
 
-      <!-- Zone de saisie -->
-      <div class="inputRow">
-        <input 
-          id="input" 
-          type="text" 
-          placeholder="Écris ici (ou utilise les boutons)…"
-          autocomplete="off"
-        />
-        <button id="send" class="send">Envoyer</button>
-      </div>
-
-    </section>
-  </main>
-
-  <!-- Script principal -->
-  <script src="app.js"></script>
-
+<script src="app.js"></script>
 </body>
 </html>
