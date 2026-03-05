@@ -9,75 +9,147 @@
 const notions = {
   consommateur: {
     titre: "Consommateur / Usager",
-    def: "Un <b>consommateur</b> achète un produit/service. Un <b>usager</b> utilise un service (souvent public) sans forcément payer directement.",
-    ex: "Ex : Client Darty = consommateur ; utilisateur impots.gouv = usager."
+    def: "Le <b>consommateur</b> est une personne physique qui consomme des produits et services afin de satisfaire ses besoins. L'<b>usager</b> est une personne qui utilise un service public — à distinguer du client d'une entreprise privée.",
+    ex: "Ex : un client Darty = consommateur ; un utilisateur de la CAF ou d'impots.gouv = usager."
   },
   processus: {
-    titre: "Processus d'achat",
-    def: "Le <b>processus d'achat</b> regroupe les étapes depuis la prise de conscience du besoin jusqu'à l'achat et l'après-achat.",
-    ex: "Ex : recherche → comparaison → achat → fidélité → SAV/avis."
-  },
-  facteurs: {
-    titre: "Besoins / Motivations / Freins / Attitudes",
-    def: "<b>Besoins</b> (Maslow) ; <b>motivations</b> hédonistes/oblatives/auto-expression ; <b>freins</b> (prix, peur…) ; <b>attitudes</b> (cognitif/affectif/conatif).",
-    ex: "Ex : frein = prix élevé ; attitude = « Apple = qualité » (cognitif)."
-  },
-  digitalisation: {
-    titre: "Digitalisation de la relation client (GRC/CRM)",
-    def: "Outils numériques (site, appli, tchat, CRM…) pour <b>optimiser la relation</b> : connaissance client + interactivité + personnalisation → fidéliser.",
-    ex: "Ex : espace client + assistance en ligne + réseaux sociaux."
+    titre: "Processus d'achat (digitalisé)",
+    def: "Le <b>processus d'achat</b> comprend 5 étapes :<br>"
+      + "① Consultation de sites Internet pour comparer produits et marques<br>"
+      + "② Visite en magasin pour la prise en main<br>"
+      + "③ Décision d'achat<br>"
+      + "④ Souscription au programme de fidélité<br>"
+      + "⑤ Actions post-achat : réclamations, SAV<br><br>"
+      + "Ce processus est aujourd'hui de plus en plus <b>digitalisé</b>, plaçant le consommateur au centre : il compare, s'informe et donne son avis en ligne.",
+    ex: "Ex : consulter Amazon → aller en magasin → acheter en ligne → laisser un avis."
   },
   traces: {
     titre: "Traces numériques",
-    def: "Informations enregistrées sur l'activité/identité des utilisateurs <b>automatiquement</b> (cookies) ou via un <b>dépôt intentionnel</b> (compte, avis).",
-    ex: "Ex : pages consultées, panier, historique, commentaires."
+    def: "Les <b>traces numériques</b> sont des informations enregistrées sur l'activité ou l'identité d'un client, collectées à différents moments :<br>"
+      + "• <b>Lors de la recherche</b> : sites visités, pages consultées, produits vus<br>"
+      + "• <b>Lors de l'achat</b> : nom, prénom, adresse, mail, historique, fréquence, montants<br>"
+      + "• <b>Après l'achat</b> : réclamations, commentaires sur réseaux sociaux ou blogs",
+    ex: "Ex : Carrefour analyse les achats de ses clients pour créer un rayon Bio suite à l'augmentation de la demande observée."
+  },
+  facteurs: {
+    titre: "Besoins / Motivations / Freins / Attitudes",
+    def: "<b>Besoins</b> (pyramide de Maslow, 5 niveaux) : physiologiques → sécurité → appartenance → estime → accomplissement de soi.<br><br>"
+      + "<b>Motivations</b> (H. Joannis) : oblatives (faire plaisir aux autres), hédonistes (se faire plaisir), auto-expression (s'affirmer).<br><br>"
+      + "<b>Freins</b> : peurs (risques réels ou irraisonnés), inhibitions (« je ne saurai pas m'en servir »), doutes (« en ai-je vraiment besoin ? »).<br><br>"
+      + "<b>Attitudes</b> : cognitif (ce que l'on croit savoir), affectif (sentiments), conatif (intentions d'achat).",
+    ex: "Ex motivation hédoniste : s'acheter un vêtement. Ex frein : peur des ondes d'un micro-ondes. Ex attitude cognitive : « les tee-shirts Lacoste sont de grande qualité »."
+  },
+  digitalisation: {
+    titre: "GRC / CRM — Gestion de la Relation Client",
+    def: "La <b>GRC</b> (Gestion de la Relation Client) est un ensemble de techniques et d'actions ayant pour but d'<b>optimiser la relation avec le client</b> afin de le <b>fidéliser</b>.<br><br>"
+      + "Elle regroupe : le recueil et l'analyse des données clients + des opérations marketing (offres personnalisées…).<br><br>"
+      + "Aujourd'hui la GRC est de plus en plus <b>digitalisée</b> : logiciels CRM, outils connectés, tchats, réseaux sociaux, sites Internet… pour garder un <b>contact permanent</b> avec le client.",
+    ex: "Ex : un site e-commerce propose des offres personnalisées basées sur l'historique d'achats du client."
   },
   reseaux: {
-    titre: "Réseaux sociaux",
-    def: "Outils grand public (Instagram, TikTok, X…) : interaction, info, avis → e-réputation + connaissance client.",
-    ex: "Ex : likes, commentaires = données pour l'organisation."
+    titre: "Réseaux sociaux (outils et usages)",
+    def: "Les <b>réseaux sociaux</b> (Instagram, TikTok, X, Facebook…) sont des outils grand public permettant aux organisations de :<br>"
+      + "• Interagir directement avec les clients/usagers<br>"
+      + "• Recueillir des avis et commentaires<br>"
+      + "• Gérer leur <b>e-réputation</b><br>"
+      + "• Mieux connaître les attentes de leur cible",
+    ex: "Ex : les commentaires et likes sur la page Instagram d'une marque sont des données précieuses sur les préférences des clients."
   },
   administration: {
     titre: "Administration électronique",
-    def: "Usage du numérique par les administrations : démarches simplifiées, accès aux documents, amélioration des échanges.",
-    ex: "Ex : impôts en ligne, CAF, ameli, demande d'actes."
+    def: "Les nouvelles technologies du numérique permettent aux <b>administrations</b> de :<br>"
+      + "• Communiquer plus facilement avec leurs <b>usagers</b><br>"
+      + "• Donner un accès aux documents administratifs<br>"
+      + "• Simplifier les démarches<br><br>"
+      + "On assiste aujourd'hui à un développement considérable de l'<b>administration électronique</b>.",
+    ex: "Ex : déclaration d'impôts en ligne sur impots.gouv.fr, suivi des droits sur ameli.fr, dossiers CAF dématérialisés."
   }
 };
 
 /* ── Flashcards ── */
 const flashcards = [
-  { q: "Quelle est la différence entre consommateur et usager ?",          r: "Consommateur = achat d'un bien/service privé. Usager = utilisation d'un service public, souvent subventionné." },
-  { q: "Quels sont les 3 types de motivations d'achat ?",                   r: "Hédonistes (plaisir personnel), oblatives (plaisir des autres), auto-expression (affirmer son identité)." },
-  { q: "Donne 3 traces numériques collectées pendant l'achat.",             r: "Mode de paiement, adresse de livraison, montant de la commande." },
-  { q: "Qu'est-ce que la GRC/CRM ?",                                        r: "Gestion de la Relation Client : ensemble d'outils numériques pour connaître, interagir et fidéliser les clients." },
-  { q: "Qu'est-ce qu'une trace numérique passive ?",                        r: "Une trace générée automatiquement sans action volontaire (ex : cookies, navigation)." },
-  { q: "Cite 2 avantages de l'administration électronique pour l'usager.",  r: "1. Démarches accessibles 24h/24. 2. Plus besoin de se déplacer, gain de temps." },
-  { q: "Qu'est-ce que l'e-réputation ?",                                    r: "L'image d'une organisation construite à partir des avis et contenus publiés en ligne." },
-  { q: "Quels sont les 3 composants de l'attitude ?",                       r: "Cognitif (croyances), affectif (sentiments), conatif (intention d'agir)." },
+  { q: "Définition : consommateur",
+    r: "Personne physique qui consomme des produits et services afin de satisfaire ses besoins." },
+  { q: "Définition : usager",
+    r: "Personne qui utilise un service public — à distinguer du « client » d'une entreprise privée." },
+  { q: "Quelles sont les 5 étapes du processus d'achat ?",
+    r: "① Recherche sur Internet ② Visite en magasin ③ Décision d'achat ④ Programme de fidélité ⑤ Post-achat (réclamations, SAV)." },
+  { q: "Donne 3 traces numériques collectées LORS DE L'ACHAT.",
+    r: "Nom/prénom/adresse/mail, historique des produits achetés, fréquence d'achat, montants des commandes." },
+  { q: "Donne 2 traces numériques collectées APRÈS L'ACHAT.",
+    r: "Réclamations éventuelles, commentaires sur les réseaux sociaux ou des blogs." },
+  { q: "Quels sont les 5 niveaux de la pyramide de Maslow ?",
+    r: "① Besoins physiologiques ② Sécurité ③ Appartenance ④ Estime ⑤ Accomplissement de soi." },
+  { q: "Quels sont les 3 types de motivations selon H. Joannis ?",
+    r: "Oblatives (faire plaisir aux autres), hédonistes (se faire plaisir), auto-expression (s'affirmer)." },
+  { q: "Quels sont les 3 types de freins à l'achat ?",
+    r: "Peurs (risques réels ou irraisonnés), inhibitions (difficulté à agir), doutes (utilité de l'achat)." },
+  { q: "Quels sont les 3 composants de l'attitude ?",
+    r: "Cognitif (ce que l'on croit savoir), affectif (sentiments), conatif (intentions d'action/achat)." },
+  { q: "Définition : GRC / CRM",
+    r: "Ensemble de techniques et d'actions ayant pour but d'optimiser la relation avec le client et ainsi de le fidéliser." },
+  { q: "Qu'est-ce que l'administration électronique ?",
+    r: "Usage du numérique par les administrations pour communiquer avec les usagers, donner accès aux documents et simplifier les démarches." },
+  { q: "Exemple de motivation hédoniste",
+    r: "S'acheter un vêtement pour se faire plaisir." },
+  { q: "Exemple de motivation d'auto-expression",
+    r: "Acheter le dernier iPhone pour montrer son niveau de vie et son goût pour la haute technologie." },
+  { q: "Exemple d'attitude cognitive",
+    r: "« Les tee-shirts de la marque Lacoste sont de grande qualité. »" },
 ];
 
 /* ── QCM progressif (3 niveaux × 5 questions) ── */
 const QCM = {
   1: [
-    { q: "Un <b>usager</b> est plutôt associé à…",                              a: ["un service public / une administration", "un achat marchand classique"],      ok: 0, exp: "Usager = utilisation d'un service, souvent public." },
-    { q: "La <b>digitalisation du processus d'achat</b> signifie que…",         a: ["le consommateur utilise des canaux numériques à plusieurs étapes", "l'achat n'existe que hors ligne"], ok: 0, exp: "Internet/applications jalonnent tout le parcours." },
-    { q: "Une <b>trace numérique</b> peut être…",                               a: ["une page consultée sur un site", "une poignée de main en magasin"],           ok: 0, exp: "Trace = info liée à l'activité/identité en ligne." },
-    { q: "La <b>GRC/CRM</b> sert surtout à…",                                   a: ["mieux connaître et fidéliser les clients", "supprimer les vendeurs"],         ok: 0, exp: "GRC = Gestion de la Relation Client via outils numériques." },
-    { q: "Un <b>frein</b> à l'achat est…",                                      a: ["une peur ou hésitation qui bloque l'acte d'achat", "une forte envie d'acheter"], ok: 0, exp: "Le frein s'oppose à la motivation." },
+    { q: "Le <b>consommateur</b> est…",
+      a: ["une personne physique qui consomme des produits/services pour satisfaire ses besoins", "une personne qui utilise un service public"],
+      ok: 0, exp: "L'usager utilise un service public ; le consommateur achète dans le secteur privé." },
+    { q: "L'<b>usager</b> se distingue du client car…",
+      a: ["il utilise un service public (CAF, impôts…)", "il achète uniquement en ligne"],
+      ok: 0, exp: "Usager = service public. Client = entreprise privée." },
+    { q: "Une <b>trace numérique</b> collectée LORS DE L'ACHAT est…",
+      a: ["le montant de la commande et l'adresse de livraison", "la couleur préférée du vendeur"],
+      ok: 0, exp: "Lors de l'achat : nom, adresse, mail, historique, montants, fréquence." },
+    { q: "La <b>GRC</b> a pour objectif principal de…",
+      a: ["optimiser la relation avec le client pour le fidéliser", "réduire le nombre de vendeurs"],
+      ok: 0, exp: "GRC = Gestion de la Relation Client → fidélisation." },
+    { q: "Un <b>frein</b> à l'achat est une…",
+      a: ["pulsion négative qui empêche l'achat", "raison qui pousse à acheter"],
+      ok: 0, exp: "Freins : peurs, inhibitions, doutes. Ils s'opposent aux motivations." },
   ],
   2: [
-    { q: "Quel exemple correspond à la collecte de données <b>pendant</b> l'achat ?", a: ["mode de livraison et paiement choisis", "couleur préférée de la voiture du vendeur"], ok: 0, exp: "Pendant l'achat : livraison, paiement, montant, adresse…" },
-    { q: "Un avantage majeur de la GRC numérique pour l'entreprise est…",       a: ["personnaliser les offres grâce aux données", "ne plus avoir besoin de personnel"], ok: 0, exp: "Données + contact permanent = personnalisation + fidélisation." },
-    { q: "Les réseaux sociaux permettent surtout de…",                          a: ["recueillir des avis et gérer l'e-réputation", "remplacer tous les magasins physiques"], ok: 0, exp: "Avis/commentaires = infos + construction de l'image." },
-    { q: "Une trace <b>intentionnelle</b> est…",                                a: ["un commentaire posté par l'utilisateur", "un cookie déposé automatiquement"], ok: 0, exp: "Intentionnelle = dépôt volontaire (avis, compte, formulaire)." },
-    { q: "L'administration électronique a pour objectif de…",                   a: ["simplifier et dématérialiser les démarches", "rendre les services publics payants"], ok: 0, exp: "Simplification + accessibilité pour l'usager." },
+    { q: "Selon <b>Maslow</b>, quel besoin est satisfait en dernier ?",
+      a: ["Le besoin d'accomplissement de soi", "Le besoin physiologique"],
+      ok: 0, exp: "La pyramide va des besoins physiologiques jusqu'à l'accomplissement de soi au sommet." },
+    { q: "La motivation <b>oblative</b> consiste à…",
+      a: ["faire plaisir aux autres (offrir un cadeau)", "se faire plaisir (s'acheter un vêtement)"],
+      ok: 0, exp: "Oblative = plaisir des autres. Hédoniste = plaisir pour soi." },
+    { q: "Les traces numériques collectées <b>après</b> l'achat sont…",
+      a: ["réclamations et commentaires sur réseaux sociaux", "adresse et mode de paiement"],
+      ok: 0, exp: "Après l'achat : réclamations SAV, avis, commentaires sur blogs et réseaux." },
+    { q: "La GRC numérique permet à l'entreprise de…",
+      a: ["garder un contact permanent et proposer des offres personnalisées", "ne plus avoir de contact avec les clients"],
+      ok: 0, exp: "Tchats, réseaux sociaux, sites = contact permanent + personnalisation." },
+    { q: "L'<b>administration électronique</b> permet aux usagers de…",
+      a: ["simplifier leurs démarches et accéder aux documents en ligne", "payer plus cher les services publics"],
+      ok: 0, exp: "Ex : déclaration d'impôts en ligne, suivi CAF, droits ameli." },
   ],
   3: [
-    { q: "Si le frein principal est le <b>prix</b>, une action pertinente est…", a: ["des promotions ou offres ciblées", "supprimer toute information sur le prix"], ok: 0, exp: "Offres ciblées peuvent lever un frein prix." },
-    { q: "Une limite d'une relation trop digitalisée est…",                      a: ["exclusion numérique de certains publics", "amélioration automatique de la qualité"], ok: 0, exp: "Tout numérique peut exclure (personnes âgées, peu équipées)." },
-    { q: "La connaissance client progresse grâce au numérique car…",             a: ["les traces sont stockées et analysées", "les clients n'ont plus de vie privée"], ok: 0, exp: "Traces + traitement = meilleure compréhension des comportements." },
-    { q: "Un outil CRM permet notamment de…",                                    a: ["segmenter les clients et personnaliser la communication", "imposer les mêmes offres à tous"], ok: 0, exp: "Segmentation = adapter l'offre à chaque profil client." },
-    { q: "L'e-réputation d'une organisation dépend principalement de…",          a: ["les avis et contenus publiés en ligne", "le nombre de ses salariés"], ok: 0, exp: "E-réputation = image construite sur le web par les publications externes." },
+    { q: "L'attitude <b>conative</b> correspond à…",
+      a: ["une intention d'achat ou d'action envers la marque", "ce que l'on croit savoir sur un produit"],
+      ok: 0, exp: "Conatif = intentions d'actions (essai, achat…). Cognitif = croyances." },
+    { q: "Carrefour crée un rayon Bio après avoir observé une hausse de la demande. Cela illustre…",
+      a: ["l'enjeu de la connaissance client pour adapter l'offre", "une stratégie de réduction des coûts"],
+      ok: 0, exp: "Connaître le comportement des consommateurs permet d'adapter l'offre aux attentes." },
+    { q: "La <b>motivation d'auto-expression</b> pousse à…",
+      a: ["acheter un produit pour affirmer son identité ou son statut", "acheter pour faire plaisir à un proche"],
+      ok: 0, exp: "Ex : acheter le dernier iPhone pour montrer un certain niveau de vie." },
+    { q: "Une limite possible de la digitalisation de la relation client est…",
+      a: ["l'exclusion numérique de certains publics (personnes âgées, peu équipées)", "la disparition complète du commerce en magasin"],
+      ok: 0, exp: "Tout digital peut exclure ceux qui ne maîtrisent pas les outils numériques." },
+    { q: "La GRC regroupe à la fois…",
+      a: ["des techniques de recueil/analyse des données ET des opérations marketing personnalisées", "uniquement des publicités à la télévision"],
+      ok: 0, exp: "GRC = données clients + offres promotionnelles personnalisées + outils connectés." },
   ]
 };
 
